@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Josh Maher" />
+  <title>Flat Architecture</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Flat Architecture</h1>
+<p class="author">Josh Maher</p>
+<p class="date">February 2026</p>
+</header>
+<h2 id="the-10000-workers">The 10,000 Workers</h2>
+<p>Imagine you wake up tomorrow with 10,000 tireless workers at your
+disposal. Each one costs nearly nothing. How would you organize
+them?</p>
+<p>You could try to invent hierarchy. But designing management layers
+for 10,000 workers is a hard problem. It’s easier to map your work into
+independent tasks with clear inputs and clear outputs that require no
+coordination.</p>
+<p>For software development, you already have this. AI agents give you
+the 10,000 workers today. The question is how you organize them.</p>
+<h2 id="the-economics-have-changed">The Economics Have Changed</h2>
+<p>Building with AI agents for the past year taught me something
+uncomfortable: the architectural patterns I’d internalized were working
+against me. The reason comes down to one ratio: cost of duplication
+versus cost of coordination.</p>
+<p>When your workers are few and expensive, you organize around shared
+resources—abstraction layers, shared libraries, canonical data models—so
+no one duplicates effort. Coordination overhead is worth it because the
+alternative is paying twice for the same work.</p>
+<p>AI workers have the same problem with deep abstractions that humans
+do—they struggle when there are too many layers and too much context to
+hold. The difference is speed: they can regenerate the same logic a
+thousand times for nearly nothing, so repetition is free.</p>
+<p>The economics have changed. The optimal architecture changed with
+it.</p>
+<h2 id="flat-architecture-principles">Flat Architecture Principles</h2>
+<p>Flat architecture means building with shallow dependency graphs,
+loose coupling, simple and stable interfaces between components, and
+explicit code instead of implicit sharing.</p>
+<p>Build systems where components can be constructed in parallel without
+coordination. Each piece only needs to know what goes in and what comes
+out.</p>
+<p>The instinct to extract shared logic immediately comes from the old
+economics, and you should resist it. Let duplication happen first.</p>
+<p>Let the features accumulate before you abstract anything. When you
+finally review what you’ve built, the shared logic that actually matters
+is far less than you expected.</p>
+<p>This isn’t a new idea—it’s just newly relevant.</p>
+<h2 id="the-unix-model">The Unix Model</h2>
+<p>Unix got this right 50 years ago by building thousands of tools
+around one simple interface: text streams and pipes. No tool needs to
+understand any other tool.</p>
+<p>The key is interface simplicity: text goes in, text comes out, and
+nothing more is required. When the interface is that simple, anyone can
+add a tool without coordinating with anyone else, and that’s how Unix
+scaled.</p>
+<p>Flat architecture has always been the right answer when labor is
+cheap and coordination is expensive. Unix proved it. AI gives you the
+same economics—for any project.</p>
+<h2 id="example-just-in-time-data">Example: Just-in-Time Data</h2>
+<p>This principle shows up clearly in data work. You have heterogeneous
+sources with different schemas, and the reflex is to unify them into a
+canonical model. Why? To avoid duplicating transformation logic across
+every query. But that’s the old economics talking. When an LLM can
+regenerate near-identical logic on demand, the abstraction exists to
+solve a problem that’s no longer expensive. You’re maintaining
+infrastructure to avoid work that now costs almost nothing.</p>
+<p>The flat alternative: store raw data in native formats with
+lightweight metadata about relationships. When you need something, the
+LLM navigates the heterogeneity and normalizes just enough, just in
+time. The transformation logic is disposable—generated for one task,
+then gone—and you never build a permanent abstraction layer to
+maintain.</p>
+<h2 id="example-report-implementation">Example: Report
+Implementation</h2>
+<p>Here’s what flat looks like in practice. I built a validation system
+with 120 reports against more than 100 heterogeneous raw data files that
+update frequently, with custom logic and formatting throughout. Raw data
+and metadata flowed into a simple output schema—just enough structure to
+support the formatting, nothing more. I skipped the framework and
+skipped the canonical data model. Each report took less than 15 minutes
+of my time.</p>
+<p>When the system was complete, I found exactly one piece of shared
+logic that mattered: a tricky calculation that had to stay consistent
+across reports. I extracted it late, after validation showed it was
+necessary. The traditional approach would have started with a framework
+and canonical data model—infrastructure unnecessary with flat
+architecture.</p>
+<h2 id="when-abstraction-still-makes-sense">When Abstraction Still Makes
+Sense</h2>
+<p>Flat architecture isn’t a blanket rejection of abstraction. It’s a
+rejection of abstraction whose only purpose is reducing duplicate human
+effort. That purpose no longer justifies the complexity it creates.</p>
+<p>Some problems are inherently abstract, and abstraction is the right
+tool for them. Compilers are a classic example: the domain has genuine
+layers—lexing, parsing, optimization, code generation—and the
+architecture mirrors that reality. The abstraction isn’t there to avoid
+duplication; it’s there because the solution is structured that way.</p>
+<p>Here’s the test: does this abstraction reflect the structure of the
+solution, or does it exist to save human labor? If the answer is labor,
+reconsider whether you still need it.</p>
+<h2 id="the-update">The Update</h2>
+<p>Your architectural instincts were shaped by decades of expensive
+human labor. The patterns you reach for automatically—early abstraction,
+DRY, shared frameworks—all assume that duplication is costly. That
+assumption no longer holds.</p>
+<p>Try flat on your next greenfield project. Skip the framework. Skip
+the canonical data model. Build features as independent units and see
+what happens. You’ll go further than you expect before needing to
+abstract, and you’ll need far less abstraction than you would have
+guessed.</p>
+</body>
+</html>

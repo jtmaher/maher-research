@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Josh Maher" />
+  <title>Leveling Up with AI</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Leveling Up with AI</h1>
+<p class="author">Josh Maher</p>
+<p class="date">February 2026</p>
+</header>
+<p>LLMs are a hundred times faster and a thousand times cheaper than
+human labor for certain tasks. But when a traditional program can do the
+job, it beats an LLM by even larger margins—a thousand to ten thousand
+times faster, a thousand to ten thousand times cheaper. Matching the
+tool to the task is one of the most important skills in building with
+AI.</p>
+<h2 id="the-framework">The Framework</h2>
+<p><strong>Level 1</strong>: Tasks a traditional program can reliably
+complete—arithmetic, database queries, schema validation, deterministic
+transformations. If you can write a function that handles every case,
+you’re at Level 1.</p>
+<p><strong>Level 2</strong>: Tasks an LLM can reliably complete, with a
+prompt serving as the program—extracting structure from unstructured
+text, translating specifications into code, generating anything where
+the requirements are clear but the output requires language.</p>
+<p><strong>Level 3</strong>: Tasks that require skilled human
+judgment—architecting systems against ambiguous requirements, designing
+research programs, managing teams, writing literature. Anything where
+the spec itself is unclear or contested belongs here.</p>
+<p><img src="levels.png" /></p>
+<h2 id="the-algorithm">The Algorithm</h2>
+<p>For any task expected to amortize its setup costs, determine its
+level and implement at that level.</p>
+<p>It’s not just cost and speed that degrade as you move up levels—it’s
+reliability. A script either works or it doesn’t. An LLM might
+hallucinate. A human might make a mistake or have a bad day. Every level
+you push a task down is a level where you gain determinism alongside
+efficiency.</p>
+<h2 id="common-mistakes">Common Mistakes</h2>
+<p>Mistakes go in both directions, and both are expensive.</p>
+<p>The <strong>Level 2 → Level 1 mistake</strong>: routing JSON
+validation through an LLM. A schema validator runs in microseconds for
+fractions of a cent. The LLM takes seconds, costs dollars at scale, and
+might hallucinate edge cases that a deterministic validator handles
+perfectly.</p>
+<p>The <strong>Level 3 → Level 2 mistake</strong>: writing a binary
+search tree implementation by hand. The spec is unambiguous—there’s
+nothing to figure out. A prompt produces tested code in seconds. The
+human takes an hour and bills accordingly.</p>
+<p>Use an LLM where a script would suffice, and you waste orders of
+magnitude in compute and time. Do something by hand that a prompt could
+handle, and you waste orders of magnitude in money and effort.</p>
+<h2 id="hypothesis-all-coding-is-level-2">Hypothesis: All Coding is
+Level 2</h2>
+<blockquote>
+<p>Every coding task is a Level 2 task. The specification is the hard
+part. Implementation is translation.</p>
+</blockquote>
+<p>Once you know exactly what behavior you want, expressing it in code
+is mechanical. The ambiguity lives in the requirements, not the
+implementation. Requirements are Level 3; implementation is Level 2.</p>
+<h2 id="the-pdf-example">The PDF Example</h2>
+<p>In a recent project, I needed a function that takes a PDF—a
+specification document describing a dataset’s file format, column
+definitions, and metadata—and extracts that information into a database.
+The task looked simple, but it had layers.</p>
+<p>Fetching the target database schema is Level 1. Inserting the
+extracted metadata is Level 1. But interpreting an unstructured PDF and
+mapping its contents to structured fields is Level 2—it requires an LLM
+call because the mapping can’t be specified deterministically in
+advance.</p>
+<p>And <em>writing</em> the prompt template for that LLM call? Also
+Level 2. I didn’t write the prompt separately—I prompted the LLM to
+write the complete function, including the prompt template itself. The
+prompt was just another part of the source code it generated.</p>
+<p>The only Level 3 work was the conversation where I specified what I
+needed. Everything else was delegation.</p>
+<h2 id="the-bottom-line">The Bottom Line</h2>
+<p>When you’re architecting a system, break the task into its component
+parts and make sure each one is implemented at the lowest level that can
+handle it. That’s how you get better cost, speed, and reliability at the
+same time.</p>
+</body>
+</html>
