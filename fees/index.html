@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Manager Fee Analyzer</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f0f2f5;
+  color: #2d3748;
+  line-height: 1.35;
+  min-height: 100vh;
+}
+
+header {
+  background: linear-gradient(135deg, #1a365d, #2b6cb0);
+  color: white;
+  padding: 0.5rem 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+header h1 { font-size: 1.1rem; font-weight: 600; }
+header p { font-size: 0.7rem; opacity: 0.85; margin-top: 0.05rem; }
+
+/* ── Tab Bar ─────────────────────────────────────────── */
+
+.tab-bar {
+  display: flex;
+  align-items: flex-end;
+  background: #d8dde4;
+  padding: 0.35rem 0.75rem 0;
+  gap: 0.25rem;
+}
+.tab-list {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+}
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  background: #c3c9d1;
+  border: none;
+  border-radius: 5px 5px 0 0;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #4a5568;
+  transition: background 0.12s;
+}
+.tab-btn.active {
+  background: #f0f2f5;
+  color: #1a365d;
+  font-weight: 600;
+}
+.tab-btn:hover { background: #d8dde4; }
+.tab-btn.active:hover { background: #f0f2f5; }
+.tab-close {
+  font-size: 0.7rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #718096;
+  line-height: 1;
+}
+.tab-close:hover { background: rgba(229,62,62,0.15); color: #e53e3e; }
+.tab-add {
+  padding: 0.25rem 0.55rem;
+  background: transparent;
+  border: 1px dashed #a0aec0;
+  border-radius: 5px 5px 0 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #718096;
+  margin-bottom: 0;
+  line-height: 1;
+}
+.tab-add:hover { background: #c3c9d1; color: #2d3748; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Layout ──────────────────────────────────────────── */
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.5rem 0.75rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  padding: 0.5rem 0.65rem;
+}
+.card h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #1a365d;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.2rem;
+}
+
+.form-group { margin-bottom: 0.4rem; }
+.form-group label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.05rem;
+}
+.form-group .hint {
+  font-size: 0.62rem;
+  color: #a0aec0;
+  margin-bottom: 0.1rem;
+}
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  background: #f7fafc;
+  transition: border-color 0.15s;
+}
+.form-group input[type="number"]:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
+  background: white;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+.checkbox-group input[type="checkbox"] {
+  width: 0.85rem;
+  height: 0.85rem;
+  accent-color: #4299e1;
+}
+.checkbox-group label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1a365d;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.15rem;
+  margin-top: 0.3rem;
+  margin-bottom: 0.35rem;
+}
+
+.btn {
+  width: 100%;
+  padding: 0.35rem;
+  background: linear-gradient(135deg, #2b6cb0, #4299e1);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 0.15rem;
+}
+.btn:hover { opacity: 0.9; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+details summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.3rem;
+  user-select: none;
+}
+details summary:hover { color: #2b6cb0; }
+
+.results-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.35rem;
+}
+
+.stat-card {
+  background: #f7fafc;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  border-left: 3px solid #4299e1;
+}
+.stat-card.green { border-left-color: #48bb78; background: #f0fff4; }
+.stat-card.amber { border-left-color: #ed8936; background: #fffaf0; }
+.stat-card.red   { border-left-color: #e53e3e; background: #fff5f5; }
+.stat-card .stat-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.stat-card .stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-top: 0.05rem;
+}
+.stat-card .stat-sub {
+  font-size: 0.62rem;
+  color: #a0aec0;
+  margin-top: 0.02rem;
+}
+
+canvas.histogram {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+th, td {
+  padding: 0.15rem 0.4rem;
+  text-align: right;
+  border-bottom: 1px solid #e2e8f0;
+}
+th {
+  font-weight: 600;
+  color: #4a5568;
+  background: #f7fafc;
+}
+th:first-child, td:first-child { text-align: left; }
+tr:hover td { background: #f7fafc; }
+
+.placeholder {
+  text-align: center;
+  padding: 1rem;
+  color: #a0aec0;
+  font-size: 0.78rem;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Investment Manager Fee Analyzer</h1>
+  <p>Monte Carlo simulation of fee deal economics</p>
+</header>
+
+<div class="tab-bar">
+  <div class="tab-list" id="tabList"></div>
+  <button class="tab-add" id="tabAdd" title="Add scenario tab">+</button>
+</div>
+
+<div class="container" id="tabContainer">
+</div>
+
+<template id="gridTemplate">
+<div class="grid">
+
+  <!-- ===== Input Panel ===== -->
+  <div>
+    <div class="card">
+      <h2>Fund Parameters</h2>
+
+      <div class="form-group">
+        <label>Starting NAV ($M)</label>
+        <div class="hint">Initial fund size in millions</div>
+        <input type="number" id="startNav" value="10" step="1" min="0.1">
+      </div>
+      <div class="form-group">
+        <label>Fund Volatility (%)</label>
+        <div class="hint">Annualized standard deviation of returns</div>
+        <input type="number" id="vol" value="10" step="0.5" min="0">
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="useSharpe" checked>
+        <label>Input as Sharpe Ratio</label>
+      </div>
+      <div class="form-group" id="alphaGroup" style="display:none;">
+        <label>Expected Return / Alpha (%)</label>
+        <div class="hint">Annualized expected gross return</div>
+        <input type="number" id="alpha" value="10" step="0.5">
+      </div>
+      <div class="form-group" id="sharpeGroup">
+        <label>Sharpe Ratio</label>
+        <div class="hint">Expected return = Sharpe × Volatility</div>
+        <input type="number" id="sharpeInput" value="1.0" step="0.05">
+      </div>
+
+      <div class="section-label">Fee Structure</div>
+
+      <div class="form-group">
+        <label>Management Fee (%)</label>
+        <div class="hint">Annual fee on beginning-of-year NAV</div>
+        <input type="number" id="mgmtFee" value="1" step="0.25" min="0">
+      </div>
+      <div class="form-group">
+        <label>Performance Fee (%)</label>
+        <div class="hint">Fee on gains above hurdle / HWM</div>
+        <input type="number" id="perfFee" value="10" step="1" min="0">
+      </div>
+      <div class="form-group">
+        <label>Hurdle Rate (%)</label>
+        <div class="hint">Min return before perf fee applies</div>
+        <input type="number" id="hurdle" value="0" step="0.5" min="0">
+      </div>
+      <div class="form-group">
+        <label>Gate (%)</label>
+        <div class="hint">Min return to trigger perf fee; fee on full return (0 = use hurdle)</div>
+        <input type="number" id="gate" value="0" step="0.5" min="0">
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="hwm" checked>
+        <label>High Water Mark</label>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="compounding">
+        <label>Compounding NAV</label>
+      </div>
+      <div class="section-label">Stopping Conditions</div>
+
+      <div class="form-group">
+        <label>Investor Drawdown Limit (%)</label>
+        <div class="hint">Investor redeems if fund drops this much from peak (0 = none)</div>
+        <input type="number" id="invDD" value="0" step="5" min="0" max="100">
+      </div>
+      <div class="form-group">
+        <label>Investor Max Time Below HWM (yrs)</label>
+        <div class="hint">Investor redeems if no new HWM in this many years (0 = none)</div>
+        <input type="number" id="invHWMTime" value="0" step="1" min="0">
+      </div>
+      <div class="form-group">
+        <label>Manager Drawdown Limit (%)</label>
+        <div class="hint">Manager walks if fund drops this much from peak (0 = none)</div>
+        <input type="number" id="mgrDD" value="0" step="5" min="0" max="100">
+      </div>
+      <div class="form-group">
+        <label>Manager Max Time Below HWM (yrs)</label>
+        <div class="hint">Manager walks if no new HWM in this many years (0 = none)</div>
+        <input type="number" id="mgrHWMTime" value="0" step="1" min="0">
+      </div>
+
+      <details>
+        <summary>Simulation Settings</summary>
+        <div class="form-group">
+          <label>Number of Simulations</label>
+          <input type="number" id="numSims" value="10000" step="1000" min="100" max="100000">
+        </div>
+        <div class="form-group">
+          <label>Years per Simulation</label>
+          <input type="number" id="numYears" value="10" step="1" min="1" max="50">
+        </div>
+      </details>
+
+      <button class="btn" id="runBtn">Run Simulation</button>
+    </div>
+  </div>
+
+  <!-- ===== Results Panel ===== -->
+  <div class="results-area">
+
+    <div class="card">
+      <div class="placeholder" id="placeholder">
+        Configure parameters and click <strong>Run Simulation</strong> to see results.
+      </div>
+      <div id="summarySection" style="display:none;">
+        <h2>Fee Stream Summary</h2>
+        <div class="stats-grid" id="summaryGrid"></div>
+      </div>
+    </div>
+
+    <div class="card" id="histCard" style="display:none;">
+      <h2>Distribution of Annual Fee Rates <span id="zeroFeeLabel" style="font-size:0.65rem;font-weight:400;color:#718096;margin-left:0.3rem;"></span></h2>
+      <canvas class="histogram" id="histogram"></canvas>
+    </div>
+
+    <div class="card" id="decompCard" style="display:none;">
+      <h2>Fee Decomposition</h2>
+      <div class="stats-grid" id="decompGrid"></div>
+    </div>
+
+    <div class="card" id="sharpeCard" style="display:none;">
+      <h2>Sharpe Ratio Comparison</h2>
+      <div class="stats-grid" id="sharpeGrid"></div>
+    </div>
+
+    <div class="card" id="investorCard" style="display:none;">
+      <h2>Impact on Investor Returns</h2>
+      <div class="stats-grid" id="investorGrid"></div>
+    </div>
+
+    <div class="card" id="percCard" style="display:none;">
+      <h2>Fee Rate Percentiles</h2>
+      <div style="overflow-x:auto;"><table id="percTable"></table></div>
+    </div>
+
+    <div class="card" id="stopCard" style="display:none;">
+      <h2>Relationship Duration</h2>
+      <div class="stats-grid" id="stopGrid"></div>
+    </div>
+
+    <div class="card" id="stopHistCard" style="display:none;">
+      <h2>Distribution of Relationship Duration</h2>
+      <canvas id="durHistogram" style="width:100%;height:150px;display:block;"></canvas>
+    </div>
+
+    <div class="card" id="yearCard" style="display:none;">
+      <h2>Year-by-Year Analysis</h2>
+      <div style="overflow-x:auto;"><table id="yearTable"></table></div>
+    </div>
+
+  </div>
+</div>
+</template>
+
+<script>
+/* ── Scoped element helper ────────────────────────────── */
+
+function el(container, id) {
+  return container.querySelector('#' + id);
+}
+
+/* ── Utilities ─────────────────────────────────────────── */
+
+// Box-Muller normal random
+function normalRandom() {
+  let u1;
+  do { u1 = Math.random(); } while (u1 === 0);
+  const u2 = Math.random();
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+function percentile(sorted, p) {
+  const idx = (p / 100) * (sorted.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] * (1 - (idx - lo)) + sorted[hi] * (idx - lo);
+}
+
+function mean(arr) {
+  let s = 0;
+  for (let i = 0; i < arr.length; i++) s += arr[i];
+  return s / arr.length;
+}
+
+function std(arr) {
+  const m = mean(arr);
+  let s = 0;
+  for (let i = 0; i < arr.length; i++) s += (arr[i] - m) * (arr[i] - m);
+  return Math.sqrt(s / arr.length);
+}
+
+function fmt(v, d) { return (v * 100).toFixed(d === undefined ? 2 : d) + '%'; }
+function fmtN(v, d) { return v.toFixed(d === undefined ? 2 : d); }
+function fmtDol(m) {
+  if (Math.abs(m) >= 1) return '$' + m.toFixed(2) + 'M';
+  return '$' + (m * 1000).toFixed(0) + 'k';
+}
+
+function statCard(label, value, sub, cls) {
+  const c = cls ? ' ' + cls : '';
+  return '<div class="stat-card' + c + '">'
+    + '<div class="stat-label">' + label + '</div>'
+    + '<div class="stat-value">' + value + '</div>'
+    + (sub ? '<div class="stat-sub">' + sub + '</div>' : '')
+    + '</div>';
+}
+
+/* ── Monte Carlo Simulation ────────────────────────────── */
+
+function runSimulation(container) {
+  const startNavM   = parseFloat(el(container, 'startNav').value);
+  const vol         = parseFloat(el(container, 'vol').value) / 100;
+  const useSharpe   = el(container, 'useSharpe').checked;
+  const alpha       = useSharpe
+    ? parseFloat(el(container, 'sharpeInput').value) * vol
+    : parseFloat(el(container, 'alpha').value) / 100;
+  const mgmtFeeRate = parseFloat(el(container, 'mgmtFee').value) / 100;
+  const perfFeeRate = parseFloat(el(container, 'perfFee').value) / 100;
+  const hurdleRate  = parseFloat(el(container, 'hurdle').value) / 100;
+  const gateRate    = parseFloat(el(container, 'gate').value) / 100;
+  const useHWM      = el(container, 'hwm').checked;
+  const compounding = el(container, 'compounding').checked;
+  const numSims     = parseInt(el(container, 'numSims').value);
+  const numYears    = parseInt(el(container, 'numYears').value);
+
+  // Stopping conditions (0 = disabled)
+  const invDD       = parseFloat(el(container, 'invDD').value) / 100;
+  const invHWMTime  = parseInt(el(container, 'invHWMTime').value) || 0;
+  const mgrDD       = parseFloat(el(container, 'mgrDD').value) / 100;
+  const mgrHWMTime  = parseInt(el(container, 'mgrHWMTime').value) || 0;
+  const hasStops    = invDD > 0 || invHWMTime > 0 || mgrDD > 0 || mgrHWMTime > 0;
+
+  const drift = alpha - 0.5 * vol * vol; // log-normal drift
+
+  const scale = startNavM / 100; // sim runs at NAV=100, scale to $M
+
+  // Flat arrays for all annual observations (sized to max possible)
+  const maxObs = numSims * numYears;
+  const allFee   = new Float64Array(maxObs);
+  const allMgmt  = new Float64Array(maxObs);
+  const allPerf  = new Float64Array(maxObs);
+  const allGross = new Float64Array(maxObs);
+  const allNet   = new Float64Array(maxObs);
+  const allFeeDol = new Float64Array(maxObs);
+
+  // Year-level accumulators (count how many sims are alive each year)
+  const yrFeeSum   = new Float64Array(numYears);
+  const yrFeeSqSum = new Float64Array(numYears);
+  const yrMgmtSum  = new Float64Array(numYears);
+  const yrPerfSum  = new Float64Array(numYears);
+  const yrPerfCnt  = new Uint32Array(numYears);
+  const yrFeeDolSum = new Float64Array(numYears);
+  const yrAlive     = new Uint32Array(numYears); // sims still running in year y
+
+  // Per-path stopping data
+  const pathDurations = new Float64Array(numSims);  // years survived
+  const pathTotalDol  = new Float64Array(numSims);  // cumulative fee $
+  const pathStopReason = new Uint8Array(numSims);   // 0=ran full, 1=invDD, 2=invHWM, 3=mgrDD, 4=mgrHWM
+
+  let idx = 0;
+
+  for (let s = 0; s < numSims; s++) {
+    let nav = 100;
+    let hwm = 100;
+    let yrsSinceHWM = 0;
+    let cumFeeDol = 0;
+    let stopped = false;
+    let cumulativePnL = 0;  // cumulative net P&L for non-compounding HWM
+    let hwmPnL = 0;         // highest cumulative P&L (P&L-based HWM)
+
+    for (let y = 0; y < numYears; y++) {
+      const navBegin = nav;
+
+      // Log-normal annual return
+      const z = normalRandom();
+      const grossReturn = Math.exp(drift + vol * z) - 1;
+      const navGross = navBegin * (1 + grossReturn);
+
+      // Management fee on beginning NAV
+      const mgmtFee = mgmtFeeRate * navBegin;
+      const navAfterMgmt = navGross - mgmtFee;
+
+      // Performance fee
+      let perfFee = 0;
+
+      if (gateRate > 0) {
+        if (grossReturn >= gateRate) {
+          let perfFeeBase = grossReturn * navBegin;
+          if (useHWM) {
+            if (compounding) {
+              perfFeeBase = Math.min(perfFeeBase, Math.max(0, navAfterMgmt - hwm));
+            } else {
+              const deficit = Math.max(0, hwmPnL - cumulativePnL);
+              perfFeeBase = Math.min(perfFeeBase, Math.max(0, (navAfterMgmt - navBegin) - deficit));
+            }
+          }
+          perfFee = perfFeeRate * perfFeeBase;
+        }
+      } else {
+        let threshold;
+        if (useHWM) {
+          if (compounding) {
+            threshold = Math.max(hwm, navBegin * (1 + hurdleRate));
+          } else {
+            const deficit = Math.max(0, hwmPnL - cumulativePnL);
+            threshold = navBegin * (1 + hurdleRate) + deficit;
+          }
+        } else {
+          threshold = navBegin * (1 + hurdleRate);
+        }
+        perfFee = perfFeeRate * Math.max(0, navAfterMgmt - threshold);
+      }
+
+      let totalFee = mgmtFee + perfFee;
+      let navEnd = navGross - totalFee;
+
+      // Prevent NAV going negative
+      if (navEnd < 0) {
+        if (navGross > 0) {
+          perfFee = Math.max(0, navGross - mgmtFee);
+          totalFee = navGross;
+        } else {
+          perfFee = 0;
+          totalFee = 0;
+        }
+        navEnd = 0.001;
+      }
+
+      const feeRate  = totalFee / navBegin;
+      const mgmtRate = mgmtFeeRate;
+      const perfRate = perfFee / navBegin;
+      const netRet   = (navEnd - navBegin) / navBegin;
+      const feeDol   = totalFee * scale;
+
+      allFee[idx]    = feeRate;
+      allMgmt[idx]   = mgmtRate;
+      allPerf[idx]   = perfRate;
+      allGross[idx]  = grossReturn;
+      allNet[idx]    = netRet;
+      allFeeDol[idx] = feeDol;
+
+      yrFeeSum[y]   += feeRate;
+      yrFeeSqSum[y] += feeRate * feeRate;
+      yrMgmtSum[y]  += mgmtRate;
+      yrPerfSum[y]  += perfRate;
+      if (perfRate > 1e-8) yrPerfCnt[y]++;
+      yrFeeDolSum[y] += feeDol;
+      yrAlive[y]++;
+
+      idx++;
+      cumFeeDol += feeDol;
+
+      // Advance state
+      nav = compounding ? navEnd : 100;
+      if (compounding) {
+        if (navEnd > hwm) {
+          hwm = navEnd;
+          yrsSinceHWM = 0;
+        } else {
+          yrsSinceHWM++;
+        }
+      } else {
+        const yearNetPnL = navEnd - navBegin;
+        cumulativePnL += yearNetPnL;
+        if (cumulativePnL > hwmPnL) {
+          hwmPnL = cumulativePnL;
+          yrsSinceHWM = 0;
+        } else {
+          yrsSinceHWM++;
+        }
+      }
+
+      // Check stopping conditions (evaluated at end of year)
+      if (hasStops) {
+        let dd;
+        if (compounding) {
+          dd = (hwm - nav) / hwm;
+        } else {
+          const peakEquity = 100 + hwmPnL;
+          const currentEquity = 100 + cumulativePnL;
+          dd = peakEquity > 0 ? (peakEquity - currentEquity) / peakEquity : 0;
+        }
+        if (invDD > 0 && dd >= invDD) {
+          pathDurations[s] = y + 1; pathTotalDol[s] = cumFeeDol; pathStopReason[s] = 1; stopped = true; break;
+        }
+        if (invHWMTime > 0 && yrsSinceHWM >= invHWMTime) {
+          pathDurations[s] = y + 1; pathTotalDol[s] = cumFeeDol; pathStopReason[s] = 2; stopped = true; break;
+        }
+        if (mgrDD > 0 && dd >= mgrDD) {
+          pathDurations[s] = y + 1; pathTotalDol[s] = cumFeeDol; pathStopReason[s] = 3; stopped = true; break;
+        }
+        if (mgrHWMTime > 0 && yrsSinceHWM >= mgrHWMTime) {
+          pathDurations[s] = y + 1; pathTotalDol[s] = cumFeeDol; pathStopReason[s] = 4; stopped = true; break;
+        }
+      }
+    }
+
+    if (!stopped) {
+      pathDurations[s] = numYears;
+      pathTotalDol[s]  = cumFeeDol;
+      pathStopReason[s] = 0;
+    }
+  }
+
+  // Trim arrays to actual observation count
+  const trimFee   = allFee.subarray(0, idx);
+  const trimMgmt  = allMgmt.subarray(0, idx);
+  const trimPerf  = allPerf.subarray(0, idx);
+  const trimGross = allGross.subarray(0, idx);
+  const trimNet   = allNet.subarray(0, idx);
+  const trimDol   = allFeeDol.subarray(0, idx);
+
+  // Aggregate statistics
+  const meanFee   = mean(trimFee);
+  const sdFee     = std(trimFee);
+
+  const meanFeeDol = mean(trimDol);
+  const sdFeeDol   = std(trimDol);
+
+  const feeSharpe  = sdFeeDol > 0 ? meanFeeDol / sdFeeDol : Infinity;
+
+  const meanMgmt  = mean(trimMgmt);
+  const meanPerf  = mean(trimPerf);
+
+  const meanGross = mean(trimGross);
+  const sdGross   = std(trimGross);
+  const meanNet   = mean(trimNet);
+  const sdNet     = std(trimNet);
+
+  const grossSharpe = sdGross > 0 ? meanGross / sdGross : Infinity;
+  const netSharpe   = sdNet   > 0 ? meanNet   / sdNet   : Infinity;
+
+  const feeDrag    = meanGross - meanNet;
+  const pctCapture = meanGross > 0 ? (feeDrag / meanGross) * 100 : 0;
+
+  const perfProb = trimPerf.reduce((c, v) => c + (v > 1e-8 ? 1 : 0), 0) / idx;
+
+  // Sorted for percentiles
+  const sortedFee = Array.from(trimFee).sort((a, b) => a - b);
+  const pctiles = [1, 5, 10, 25, 50, 75, 90, 95, 99].map(p => ({
+    p, value: percentile(sortedFee, p)
+  }));
+
+  // Year-by-year (use yrAlive for denominator)
+  const yearlyStats = [];
+  for (let y = 0; y < numYears; y++) {
+    const n = yrAlive[y] || 1;
+    const mf = yrFeeSum[y] / n;
+    const vf = (yrFeeSqSum[y] / n) - mf * mf;
+    yearlyStats.push({
+      year: y + 1,
+      alive: yrAlive[y],
+      meanFee: mf,
+      sdFee: Math.sqrt(Math.max(0, vf)),
+      meanMgmt: yrMgmtSum[y] / n,
+      meanPerf: yrPerfSum[y] / n,
+      perfProb: yrPerfCnt[y] / n,
+      meanFeeDol: yrFeeDolSum[y] / n
+    });
+  }
+
+  // Stopping condition stats
+  const meanDuration    = mean(pathDurations);
+  const sdDuration      = std(pathDurations);
+  const sortedDur       = Array.from(pathDurations).sort((a, b) => a - b);
+  const medianDuration  = percentile(sortedDur, 50);
+  const meanTotalDol    = mean(pathTotalDol);
+  const sdTotalDol      = std(pathTotalDol);
+  const sortedTotDol    = Array.from(pathTotalDol).sort((a, b) => a - b);
+  const medianTotalDol  = percentile(sortedTotDol, 50);
+  const pctStopped      = pathStopReason.reduce((c, v) => c + (v > 0 ? 1 : 0), 0) / numSims;
+
+  // Count by stop reason
+  const stopCounts = [0, 0, 0, 0, 0]; // 0=full, 1=invDD, 2=invHWM, 3=mgrDD, 4=mgrHWM
+  for (let i = 0; i < numSims; i++) stopCounts[pathStopReason[i]]++;
+
+  return {
+    allFeeRates: trimFee, allPerfRates: trimPerf,
+    meanFee, sdFee, feeSharpe,
+    meanMgmt, meanPerf, perfProb,
+    meanFeeDol, sdFeeDol,
+    meanGross, sdGross, grossSharpe,
+    meanNet, sdNet, netSharpe,
+    feeDrag, pctCapture,
+    pctiles, yearlyStats,
+    numSims, numYears, startNavM, hasStops,
+    pathDurations, meanDuration, sdDuration, medianDuration,
+    pathTotalDol, meanTotalDol, sdTotalDol, medianTotalDol,
+    pctStopped, stopCounts
+  };
+}
+
+/* ── Histogram Drawing ─────────────────────────────────── */
+
+function drawHistogram(canvas, zeroFeeLabel, data, perfData, meanVal) {
+  // Exclude mgmt-fee-only observations (perf fee ~ 0) from histogram
+  const EPS = 1e-8;
+  const nonZero = [];
+  let zeroCount = 0;
+  for (let i = 0; i < data.length; i++) {
+    if (perfData[i] <= EPS) zeroCount++;
+    else nonZero.push(data[i]);
+  }
+  const zeroPct = (zeroCount / data.length * 100).toFixed(1);
+  zeroFeeLabel.textContent =
+    zeroCount > 0 ? '(' + zeroPct + '% mgmt-fee-only years excluded)' : '';
+
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  if (nonZero.length === 0) {
+    ctx.fillStyle = '#a0aec0';
+    ctx.font = '14px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('All observations are zero-fee', cssW / 2, cssH / 2);
+    return;
+  }
+
+  // Use 1st-99th percentile range of non-zero data for display
+  const sorted = nonZero.sort((a, b) => a - b);
+  const lo = percentile(sorted, 0.5);
+  const hi = percentile(sorted, 99.5);
+  const range = hi - lo || 0.01;
+
+  const bins = 60;
+  const binW = range / bins;
+  const counts = new Uint32Array(bins);
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i] >= lo && sorted[i] <= hi) {
+      const b = Math.min(Math.floor((sorted[i] - lo) / binW), bins - 1);
+      counts[b]++;
+    }
+  }
+
+  let maxC = 0;
+  for (let i = 0; i < bins; i++) if (counts[i] > maxC) maxC = counts[i];
+
+  const pad = { t: 16, r: 20, b: 42, l: 52 };
+  const pw = cssW - pad.l - pad.r;
+  const ph = cssH - pad.t - pad.b;
+  const bw = pw / bins;
+
+  // Bars
+  for (let i = 0; i < bins; i++) {
+    const bh = maxC > 0 ? (counts[i] / maxC) * ph : 0;
+    ctx.fillStyle = '#4299e1';
+    ctx.fillRect(pad.l + i * bw, pad.t + ph - bh, Math.max(bw - 1, 1), bh);
+  }
+
+  // Mean line
+  if (meanVal >= lo && meanVal <= hi) {
+    const mx = pad.l + ((meanVal - lo) / range) * pw;
+    ctx.strokeStyle = '#e53e3e';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath(); ctx.moveTo(mx, pad.t); ctx.lineTo(mx, pad.t + ph); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#e53e3e';
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Mean ' + fmt(meanVal), mx, pad.t - 3);
+  }
+
+  // Axes
+  ctx.strokeStyle = '#cbd5e0'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t + ph); ctx.lineTo(pad.l + pw, pad.t + ph); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ph); ctx.stroke();
+
+  // X labels
+  ctx.fillStyle = '#718096'; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  for (let i = 0; i <= 5; i++) {
+    const v = lo + range * i / 5;
+    const x = pad.l + pw * i / 5;
+    ctx.fillText(fmt(v, 1), x, pad.t + ph + 16);
+    ctx.beginPath(); ctx.moveTo(x, pad.t + ph); ctx.lineTo(x, pad.t + ph + 4); ctx.stroke();
+  }
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.fillText('Annual Fee Rate', pad.l + pw / 2, pad.t + ph + 34);
+
+  // Y labels
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const v = Math.round(maxC * i / 4);
+    const y = pad.t + ph - ph * i / 4;
+    ctx.fillText(v, pad.l - 6, y + 4);
+    if (i > 0) {
+      ctx.strokeStyle = '#edf2f7';
+      ctx.beginPath(); ctx.moveTo(pad.l + 1, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+      ctx.strokeStyle = '#cbd5e0';
+    }
+  }
+}
+
+function drawDurHistogram(canvas, durations, numYears) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  // One bin per year (1..numYears)
+  const counts = new Uint32Array(numYears);
+  for (let i = 0; i < durations.length; i++) {
+    const yr = Math.round(durations[i]);
+    if (yr >= 1 && yr <= numYears) counts[yr - 1]++;
+  }
+
+  let maxC = 0;
+  for (let i = 0; i < numYears; i++) if (counts[i] > maxC) maxC = counts[i];
+
+  const pad = { t: 16, r: 20, b: 42, l: 52 };
+  const pw = cssW - pad.l - pad.r;
+  const ph = cssH - pad.t - pad.b;
+  const bw = pw / numYears;
+
+  for (let i = 0; i < numYears; i++) {
+    const bh = maxC > 0 ? (counts[i] / maxC) * ph : 0;
+    ctx.fillStyle = '#48bb78';
+    ctx.fillRect(pad.l + i * bw, pad.t + ph - bh, Math.max(bw - 1, 1), bh);
+  }
+
+  // Axes
+  ctx.strokeStyle = '#cbd5e0'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t + ph); ctx.lineTo(pad.l + pw, pad.t + ph); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ph); ctx.stroke();
+
+  // X labels
+  ctx.fillStyle = '#718096'; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  const step = numYears <= 20 ? 1 : Math.ceil(numYears / 10);
+  for (let i = 0; i < numYears; i += step) {
+    const x = pad.l + (i + 0.5) * bw;
+    ctx.fillText((i + 1).toString(), x, pad.t + ph + 16);
+  }
+  ctx.fillText('Years', pad.l + pw / 2, pad.t + ph + 34);
+
+  // Y labels
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const v = Math.round(maxC * i / 4);
+    const y = pad.t + ph - ph * i / 4;
+    ctx.fillText(v, pad.l - 6, y + 4);
+    if (i > 0) {
+      ctx.strokeStyle = '#edf2f7';
+      ctx.beginPath(); ctx.moveTo(pad.l + 1, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+      ctx.strokeStyle = '#cbd5e0';
+    }
+  }
+}
+
+/* ── Display Results ───────────────────────────────────── */
+
+function runAndDisplay(tab) {
+  const container = tab.container;
+  const btn = el(container, 'runBtn');
+  btn.disabled = true;
+  btn.textContent = 'Simulating\u2026';
+
+  setTimeout(() => {
+    try {
+      const r = runSimulation(container);
+      tab.cachedResults = r;
+
+      // Summary
+      el(container, 'placeholder').style.display = 'none';
+      const ss = el(container, 'summarySection');
+      ss.style.display = 'block';
+      el(container, 'summaryGrid').innerHTML =
+        statCard('Mean Annual Fee Rate', fmt(r.meanFee), (r.meanFee * 10000).toFixed(0) + ' bps', 'green') +
+        statCard('Std Dev of Fee Rate', fmt(r.sdFee), (r.sdFee * 10000).toFixed(0) + ' bps') +
+        statCard('Implied Fee Sharpe', r.feeSharpe > 100 ? '\u221E' : fmtN(r.feeSharpe), 'Mean / StdDev of fee $ cash flow', 'amber') +
+        statCard('Median Fee Rate', fmt(r.pctiles[4].value), '50th percentile') +
+        statCard('Mean Annual Fee $', fmtDol(r.meanFeeDol), 'Expected annual fee income', 'green') +
+        statCard('Std Dev Fee $', fmtDol(r.sdFeeDol), 'Annual fee volatility');
+
+      // Histogram
+      el(container, 'histCard').style.display = 'block';
+      requestAnimationFrame(() => drawHistogram(
+        el(container, 'histogram'),
+        el(container, 'zeroFeeLabel'),
+        r.allFeeRates, r.allPerfRates, r.meanFee
+      ));
+
+      // Decomposition
+      el(container, 'decompCard').style.display = 'block';
+      el(container, 'decompGrid').innerHTML =
+        statCard('Management Fee', fmt(r.meanMgmt), 'Mean annual rate') +
+        statCard('Performance Fee', fmt(r.meanPerf), 'Mean annual rate') +
+        statCard('P(Perf Fee > 0)', fmt(r.perfProb, 1), 'In any given year');
+
+      // Sharpe comparison
+      el(container, 'sharpeCard').style.display = 'block';
+      el(container, 'sharpeGrid').innerHTML =
+        statCard('Gross Fund Sharpe', fmtN(r.grossSharpe), fmt(r.meanGross) + ' ret / ' + fmt(r.sdGross) + ' vol') +
+        statCard('Net Fund Sharpe', fmtN(r.netSharpe), fmt(r.meanNet) + ' ret / ' + fmt(r.sdNet) + ' vol', r.netSharpe < 0 ? 'red' : 'green') +
+        statCard('Fee Stream Sharpe', r.feeSharpe > 100 ? '\u221E' : fmtN(r.feeSharpe), fmtDol(r.meanFeeDol) + ' / ' + fmtDol(r.sdFeeDol) + ' vol', 'amber');
+
+      // Investor impact
+      el(container, 'investorCard').style.display = 'block';
+      el(container, 'investorGrid').innerHTML =
+        statCard('Mean Gross Return', fmt(r.meanGross), 'Before fees') +
+        statCard('Mean Net Return', fmt(r.meanNet), 'After all fees', r.meanNet < 0 ? 'red' : 'green') +
+        statCard('Total Fee Drag', fmt(r.feeDrag), 'Gross \u2212 net') +
+        statCard('Fee Capture Ratio', fmtN(r.pctCapture, 1) + '%', 'Fees as % of gross return');
+
+      // Percentiles
+      el(container, 'percCard').style.display = 'block';
+      let ph = '<thead><tr>';
+      r.pctiles.forEach(p => ph += '<th>' + p.p + (p.p === 1 ? 'st' : p.p === 2 ? 'nd' : p.p === 3 ? 'rd' : 'th') + '</th>');
+      ph += '</tr></thead><tbody><tr>';
+      r.pctiles.forEach(p => ph += '<td>' + fmt(p.value) + '</td>');
+      ph += '</tr></tbody>';
+      el(container, 'percTable').innerHTML = ph;
+
+      // Relationship duration
+      const stopNames = ['Ran full term', 'Investor DD limit', 'Investor HWM timeout', 'Manager DD limit', 'Manager HWM timeout'];
+      el(container, 'stopCard').style.display = 'block';
+      let stopHtml =
+        statCard('Mean Duration', fmtN(r.meanDuration, 1) + ' yrs', 'SD ' + fmtN(r.sdDuration, 1) + ' yrs', 'green') +
+        statCard('Median Duration', fmtN(r.medianDuration, 1) + ' yrs', '') +
+        statCard('% Stopped Early', fmt(r.pctStopped, 1), (r.numSims - r.stopCounts[0]) + ' of ' + r.numSims + ' paths', r.pctStopped > 0.5 ? 'red' : 'amber') +
+        statCard('Mean Total Fees', fmtDol(r.meanTotalDol), 'Over full relationship', 'green') +
+        statCard('Median Total Fees', fmtDol(r.medianTotalDol), '') +
+        statCard('SD Total Fees', fmtDol(r.sdTotalDol), '');
+      for (let i = 1; i <= 4; i++) {
+        if (r.stopCounts[i] > 0) {
+          stopHtml += statCard(stopNames[i], fmt(r.stopCounts[i] / r.numSims, 1), r.stopCounts[i] + ' paths');
+        }
+      }
+      el(container, 'stopGrid').innerHTML = stopHtml;
+
+      el(container, 'stopHistCard').style.display = r.hasStops ? 'block' : 'none';
+      if (r.hasStops) {
+        requestAnimationFrame(() => drawDurHistogram(
+          el(container, 'durHistogram'),
+          r.pathDurations, r.numYears
+        ));
+      }
+
+      // Year-by-year
+      el(container, 'yearCard').style.display = 'block';
+      const aliveCol = r.hasStops ? '<th>Alive</th>' : '';
+      let yh = '<thead><tr><th>Year</th>' + aliveCol + '<th>Mean Fee</th><th>SD Fee</th><th>Mgmt Fee</th><th>Perf Fee</th><th>P(Perf&gt;0)</th><th>Mean Fee $</th></tr></thead><tbody>';
+      r.yearlyStats.forEach(ys => {
+        const aliveCell = r.hasStops ? '<td>' + ys.alive + '</td>' : '';
+        yh += '<tr><td>' + ys.year + '</td>' + aliveCell + '<td>' + fmt(ys.meanFee) + '</td><td>' + fmt(ys.sdFee) + '</td><td>' + fmt(ys.meanMgmt) + '</td><td>' + fmt(ys.meanPerf) + '</td><td>' + fmt(ys.perfProb, 1) + '</td><td>' + fmtDol(ys.meanFeeDol) + '</td></tr>';
+      });
+      yh += '</tbody>';
+      el(container, 'yearTable').innerHTML = yh;
+
+    } catch (e) {
+      alert('Simulation error: ' + e.message);
+      console.error(e);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Run Simulation';
+  }, 30);
+}
+
+/* ── Tab Management ────────────────────────────────────── */
+
+const tabs = [];
+let activeTabId = null;
+let nextTabId = 1;
+const templateEl = document.getElementById('gridTemplate');
+
+function createTab() {
+  const id = nextTabId++;
+
+  const content = document.createElement('div');
+  content.className = 'tab-content';
+  content.dataset.tabId = id;
+  content.appendChild(templateEl.content.cloneNode(true));
+  document.getElementById('tabContainer').appendChild(content);
+
+  const tab = {
+    id: id,
+    container: content,
+    cachedResults: null,
+    debounceTimer: null
+  };
+  tabs.push(tab);
+
+  // Wire up input listeners (debounced auto-run)
+  content.querySelectorAll('input[type="number"], input[type="checkbox"]').forEach(input => {
+    const handler = () => {
+      clearTimeout(tab.debounceTimer);
+      tab.debounceTimer = setTimeout(() => runAndDisplay(tab), 300);
+    };
+    input.addEventListener('input', handler);
+    input.addEventListener('change', handler);
+  });
+
+  // Wire up Sharpe/ER toggle
+  el(content, 'useSharpe').addEventListener('change', () => {
+    const on = el(content, 'useSharpe').checked;
+    const volVal = parseFloat(el(content, 'vol').value) / 100;
+    if (on) {
+      const er = parseFloat(el(content, 'alpha').value) / 100;
+      el(content, 'sharpeInput').value = volVal > 0 ? (er / volVal).toFixed(2) : '0';
+    } else {
+      const sr = parseFloat(el(content, 'sharpeInput').value);
+      el(content, 'alpha').value = (sr * volVal * 100).toFixed(1);
+    }
+    el(content, 'alphaGroup').style.display = on ? 'none' : '';
+    el(content, 'sharpeGroup').style.display = on ? '' : 'none';
+  });
+
+  // Wire up run button
+  el(content, 'runBtn').addEventListener('click', () => runAndDisplay(tab));
+
+  switchTab(id);
+  renderTabBar();
+
+  // Run initial simulation
+  runAndDisplay(tab);
+
+  return tab;
+}
+
+function switchTab(id) {
+  activeTabId = id;
+  tabs.forEach(t => {
+    t.container.classList.toggle('active', t.id === id);
+  });
+  renderTabBar();
+
+  // Redraw canvases for the newly visible tab
+  const tab = tabs.find(t => t.id === id);
+  if (tab && tab.cachedResults) {
+    const r = tab.cachedResults;
+    requestAnimationFrame(() => {
+      drawHistogram(
+        el(tab.container, 'histogram'),
+        el(tab.container, 'zeroFeeLabel'),
+        r.allFeeRates, r.allPerfRates, r.meanFee
+      );
+      if (r.hasStops) {
+        drawDurHistogram(
+          el(tab.container, 'durHistogram'),
+          r.pathDurations, r.numYears
+        );
+      }
+    });
+  }
+}
+
+function closeTab(id) {
+  if (tabs.length <= 1) return;
+  const idx = tabs.findIndex(t => t.id === id);
+  if (idx === -1) return;
+
+  clearTimeout(tabs[idx].debounceTimer);
+  tabs[idx].container.remove();
+  tabs.splice(idx, 1);
+
+  if (activeTabId === id) {
+    const newIdx = Math.min(idx, tabs.length - 1);
+    switchTab(tabs[newIdx].id);
+  }
+  renderTabBar();
+}
+
+function renderTabBar() {
+  const list = document.getElementById('tabList');
+  list.innerHTML = '';
+  tabs.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (t.id === activeTabId ? ' active' : '');
+    btn.addEventListener('click', () => switchTab(t.id));
+
+    const label = document.createTextNode('Scenario ' + t.id);
+    btn.appendChild(label);
+
+    if (tabs.length > 1) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'tab-close';
+      closeBtn.textContent = '\u00d7';
+      closeBtn.title = 'Close tab';
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeTab(t.id);
+      });
+      btn.appendChild(closeBtn);
+    }
+
+    list.appendChild(btn);
+  });
+}
+
+/* ── Resize handler ────────────────────────────────────── */
+
+window.addEventListener('resize', () => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (tab && tab.cachedResults) {
+    const r = tab.cachedResults;
+    drawHistogram(
+      el(tab.container, 'histogram'),
+      el(tab.container, 'zeroFeeLabel'),
+      r.allFeeRates, r.allPerfRates, r.meanFee
+    );
+    if (r.hasStops) {
+      drawDurHistogram(
+        el(tab.container, 'durHistogram'),
+        r.pathDurations, r.numYears
+      );
+    }
+  }
+});
+
+/* ── Init ──────────────────────────────────────────────── */
+
+document.getElementById('tabAdd').addEventListener('click', () => createTab());
+
+// Create the first tab (runs initial simulation automatically)
+createTab();
+</script>
+</body>
+</html>
